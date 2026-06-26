@@ -1,0 +1,28 @@
+name: Scheduled rebuild
+
+# The reference docs are pulled from github.com/liu1700/orlop at build time, so
+# this site must be rebuilt to pick up doc changes. This job pokes the Cloudflare
+# Workers Build deploy hook once a day (and on demand) to trigger a fresh build.
+# The hook URL is stored in the CF_DEPLOY_HOOK_URL repo secret — no CF API token
+# is needed here.
+
+on:
+  schedule:
+    - cron: '30 8 * * *' # daily ~08:30 UTC
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cloudflare deploy hook
+        env:
+          DEPLOY_HOOK: ${{ secrets.CF_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "::error::CF_DEPLOY_HOOK_URL secret is not set."
+            exit 1
+          fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$DEPLOY_HOOK")
+          echo "Deploy hook responded HTTP $code"
+          test "$code" -ge 200 -a "$code" -lt 300
