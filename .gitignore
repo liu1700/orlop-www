@@ -1,0 +1,14 @@
+# build output
+dist/
+# generated site assets
+.astro/
+# dependencies
+node_modules/
+# generated from ../docs by scripts/sync-docs.mjs — do not edit or commit
+src/content/docs/reference/
+public/llms.txt
+public/llms-full.txt
+# env / logs
+.env
+.env.production
+npm-debug.log*

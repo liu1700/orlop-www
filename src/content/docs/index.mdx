@@ -1,0 +1,65 @@
+---
+title: orlop
+description: A zero-trust file plane that gives each untrusted agent its own durable, per-tenant POSIX disk — without ever handing it a storage credential.
+template: splash
+hero:
+  tagline: Give each untrusted agent its own durable POSIX disk — without ever handing it your storage credentials.
+  actions:
+    - text: Quickstart
+      link: /reference/standalone-quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: What is orlop?
+      link: /what-is-orlop/
+      icon: open-book
+      variant: secondary
+    - text: View on GitHub
+      link: https://github.com/liu1700/orlop
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+orlop is a multi-tenant, **zero-trust file plane** for agent sandboxes. Each
+agent gets one auto-expanding POSIX directory that it mounts over FUSE and uses
+like an ordinary disk. The bytes live remotely in a content-addressed chunk
+store, so when the sandbox dies the data persists and the next run re-mounts the
+same disk with zero idle compute — and the agent never sees a storage credential.
+
+## Why orlop
+
+<CardGrid>
+  <Card title="Zero-trust by construction" icon="approve-check">
+    Per-agent mTLS identity and server-side path confinement. No shared storage
+    credential to leak, widen, or exfiltrate.
+  </Card>
+  <Card title="Survives the sandbox" icon="rocket">
+    Data lives in the remote chunk store and re-mounts on the next run with zero
+    idle compute.
+  </Card>
+  <Card title="Content-addressed & deduped" icon="seti:db">
+    Bytes are stored verbatim and deduped by hash, so keeping full, uncompressed
+    history is nearly free.
+  </Card>
+  <Card title="Incremental & fast" icon="bars">
+    A single-byte edit ships one ~4 MiB chunk, not the whole file; a persistent
+    client cache makes re-reads run at local-disk speed.
+  </Card>
+  <Card title="Atomic overwrites" icon="random">
+    Versioned, compare-and-swap manifests replace a stale fact in place instead
+    of appending and hoping retrieval picks the latest.
+  </Card>
+  <Card title="Drop-in POSIX" icon="laptop">
+    FUSE on Linux, in-process NFSv3 loopback on macOS. The agent just sees a
+    directory.
+  </Card>
+</CardGrid>
+
+## Built for agent memory
+
+orlop is the **storage substrate** for an agent-memory stack — durable, cheap to
+update, and safe under multi-tenancy — but it does no extraction, ranking, or
+semantic consolidation; the layer above does. See
+[Agent memory](/reference/agent-memory/) for what orlop gives that stack and
+where it stops.
