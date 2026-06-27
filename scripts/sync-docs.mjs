@@ -21,7 +21,7 @@ const BRANCH = 'main';
 const REPO_BLOB = `https://github.com/${REPO}/blob/${BRANCH}`;
 
 // One-line product summary, reused across llms.txt and the per-page Markdown
-// representations served for `Accept: text/markdown` (functions/_middleware.js).
+// representations served for `Accept: text/markdown` (worker/index.js).
 const TAGLINE =
   'orlop is a multi-tenant, zero-trust file plane for agent sandboxes. Each ' +
   'agent gets its own durable, auto-expanding POSIX disk mounted over FUSE; ' +
@@ -86,18 +86,62 @@ async function listRemote() {
   );
 }
 
-async function loadRaw() {
-  const candidates = [process.env.ORLOP_DOCS_DIR, path.resolve(ROOT, '..', 'docs')];
-  for (const dir of candidates) {
-    if (!dir) continue;
-    try {
-      await fs.access(dir);
-      console.log(`sync:docs — using local docs at ${dir}`);
-      return listLocal(dir);
-    } catch {
-      /* not present, try next */
-    }
+// Guard against silently building from the wrong local directory. The local
+// fallbacks below are a convenience for offline dev, but a same-named sibling
+// `../docs` belonging to an unrelated project would otherwise be used without
+// warning — this has actually happened, publishing another repo's API reference.
+// Require the directory to look like the orlop docs: at least one Markdown file
+// that mentions the project by name. Content-based, so it survives file renames.
+async function looksLikeOrlopDocs(dir) {
+  let files;
+  try {
+    files = (await fs.readdir(dir)).filter((f) => f.endsWith('.md'));
+  } catch {
+    return false; // missing or unreadable
   }
+  if (files.length === 0) return false;
+  for (const f of files) {
+    const text = await fs.readFile(path.join(dir, f), 'utf8');
+    if (/\borlop\b/i.test(text)) return true;
+  }
+  return false;
+}
+
+async function loadRaw() {
+  // Explicit override: trust the path the operator pointed at, but fail loudly
+  // if it isn't the orlop docs rather than building someone else's content.
+  const explicit = process.env.ORLOP_DOCS_DIR;
+  if (explicit) {
+    if (await looksLikeOrlopDocs(explicit)) {
+      console.log(`sync:docs — using local docs at ${explicit}`);
+      return listLocal(explicit);
+    }
+    throw new Error(
+      `ORLOP_DOCS_DIR=${explicit} doesn't look like the orlop docs ` +
+        `(no .md file mentions "orlop"). Point it at <orlop>/docs, or unset it to fetch from GitHub.`
+    );
+  }
+
+  // Implicit sibling fallback: use it only if it really is the orlop docs;
+  // otherwise warn and fetch from GitHub rather than silently using the wrong dir.
+  const sibling = path.resolve(ROOT, '..', 'docs');
+  if (await looksLikeOrlopDocs(sibling)) {
+    console.log(`sync:docs — using local docs at ${sibling}`);
+    return listLocal(sibling);
+  }
+  let siblingExists = true;
+  try {
+    await fs.access(sibling);
+  } catch {
+    siblingExists = false;
+  }
+  if (siblingExists) {
+    console.warn(
+      `sync:docs — ignoring ${sibling}: doesn't look like the orlop docs ` +
+        `(no .md file mentions "orlop"). Set ORLOP_DOCS_DIR to use a local copy.`
+    );
+  }
+
   console.log(`sync:docs — fetching docs from github.com/${REPO}@${BRANCH}`);
   return listRemote();
 }
@@ -212,14 +256,18 @@ async function writeLlms(docs, overview) {
   await fs.writeFile(path.join(PUBLIC_DIR, 'llms-full.txt'), full);
 }
 
-// Per-page Markdown representations. functions/_middleware.js serves these when
+// Per-page Markdown representations. worker/index.js serves these when
 // a client sends `Accept: text/markdown`, mirroring the site's routes:
 //   /                  -> public/index.md
 //   /<slug>/           -> public/<slug>.md
 //   /reference/<slug>/ -> public/reference/<slug>.md
 // All files are git-ignored build artifacts, like the llms.txt outputs.
 async function writeMarkdownPages(docs, overview) {
-  await fs.mkdir(path.join(PUBLIC_DIR, 'reference'), { recursive: true });
+  // Regenerate from scratch so stale per-page variants (e.g. left over from a
+  // previous build with a different doc set) don't linger and get published.
+  const refDir = path.join(PUBLIC_DIR, 'reference');
+  await fs.rm(refDir, { recursive: true, force: true });
+  await fs.mkdir(refDir, { recursive: true });
 
   // Landing page: index.mdx is JSX, so synthesize a concise Markdown view.
   let index = `# orlop\n\n> ${TAGLINE}\n\n## Overview\n`;
