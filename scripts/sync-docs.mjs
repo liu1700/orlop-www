@@ -299,8 +299,47 @@ async function writeMarkdownPages(docs, overview) {
   }
 }
 
+// install.sh — the one-line installer served at /install.sh
+// (curl -fsSL https://orlop.dev/install.sh | sh). Single source of truth is the
+// orlop repo root, same policy as the docs: a local checkout if present, else
+// GitHub. Non-fatal — a failed fetch just skips publishing it, like the docs.
+async function writeInstallScript() {
+  const candidates = [];
+  if (process.env.ORLOP_DOCS_DIR) {
+    candidates.push(path.join(process.env.ORLOP_DOCS_DIR, '..', 'install.sh'));
+  }
+  candidates.push(path.resolve(ROOT, '..', 'install.sh'));
+  for (const p of candidates) {
+    try {
+      const script = await fs.readFile(p, 'utf8');
+      await fs.mkdir(PUBLIC_DIR, { recursive: true });
+      await fs.writeFile(path.join(PUBLIC_DIR, 'install.sh'), script);
+      console.log(`sync:docs — install.sh from ${p}`);
+      return;
+    } catch {
+      /* try next candidate */
+    }
+  }
+  try {
+    const r = await fetch(
+      `https://raw.githubusercontent.com/${REPO}/${BRANCH}/install.sh`,
+      { headers: { 'User-Agent': 'orlop-www-build' } }
+    );
+    if (r.ok) {
+      await fs.mkdir(PUBLIC_DIR, { recursive: true });
+      await fs.writeFile(path.join(PUBLIC_DIR, 'install.sh'), await r.text());
+      console.log(`sync:docs — install.sh from github.com/${REPO}@${BRANCH}`);
+    } else {
+      console.warn(`sync:docs — install.sh fetch HTTP ${r.status}; /install.sh not published.`);
+    }
+  } catch (e) {
+    console.warn(`sync:docs — install.sh unreachable (${e.message}); /install.sh not published.`);
+  }
+}
+
 const docs = await readDocs();
 await writeReference(docs);
+await writeInstallScript();
 
 const overview = [];
 for (const slug of AUTHORED_SLUGS) {

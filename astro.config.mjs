@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightPageActions from 'starlight-page-actions';
 
 // TODO: change this to your real domain once registered (used for canonical
 // URLs, the sitemap, Open Graph tags, and the absolute links in llms.txt).
@@ -18,6 +19,27 @@ export default defineConfig({
         'A zero-trust file plane that gives each untrusted agent its own durable, per-tenant POSIX disk, with identity.',
       tagline:
         'Durable per-tenant POSIX disks for untrusted agent sandboxes.',
+      // Per-page "Copy Markdown" + "Open in ChatGPT / Claude / Cursor / Copilot"
+      // actions, so a reader can hand any page straight to their coding agent.
+      // We deliberately omit `baseUrl`: that switch is the plugin's only trigger
+      // for generating its own llms.txt (it early-returns without it), and we
+      // already publish a curated llms.txt + per-page .md from scripts/sync-docs.mjs.
+      // The buttons don't need it — "Open in…" uses Astro's `site` and "Copy"
+      // fetches the per-page <path>.md we emit.
+      plugins: [
+        starlightPageActions({
+          actions: {
+            chatgpt: true,
+            claude: true,
+            cursor: true,
+            githubCopilot: true,
+            markdown: true,
+            t3chat: false,
+            v0: false,
+            perplexity: false,
+          },
+        }),
+      ],
       // Brand mark in the browser tab. The SVG carries its own dark background,
       // so it reads on both light and dark UA chrome. The .ico + apple-touch
       // fallbacks (wired in `head` below) cover Safari/iOS and any client that
@@ -68,7 +90,7 @@ export default defineConfig({
         {
           label: 'Guides',
           items: [
-            { label: 'Quickstart (single node)', slug: 'reference/standalone-quickstart' },
+            { label: 'Quickstart', slug: 'reference/standalone-quickstart' },
             { label: 'Database backends', slug: 'reference/database-backends' },
             { label: 'Agent memory', slug: 'reference/agent-memory' },
           ],

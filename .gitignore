@@ -8,6 +8,7 @@ node_modules/
 src/content/docs/reference/
 public/llms.txt
 public/llms-full.txt
+public/install.sh
 # per-page Markdown variants for Accept: text/markdown (worker/index.js)
 public/index.md
 public/what-is-orlop.md
