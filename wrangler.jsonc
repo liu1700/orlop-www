@@ -1,0 +1,18 @@
+{
+  // Cloudflare Worker + Static Assets deploy for orlop.dev.
+  //
+  // The site is a static Astro build (./dist) served as Workers Static Assets.
+  // `main` + `assets.run_worker_first` make the Worker run before asset matching
+  // so it can do Accept-based content negotiation (Markdown for Agents); see
+  // worker/index.js. `npm run build` produces ./dist; `wrangler deploy` uploads
+  // the Worker and the assets together.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "orlop-www",
+  "compatibility_date": "2026-06-27",
+  "main": "./worker/index.js",
+  "assets": {
+    "directory": "./dist/",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  }
+}
