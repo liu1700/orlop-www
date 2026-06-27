@@ -4,6 +4,14 @@
 
 # Default rules for every crawler and agent.
 User-agent: *
+# Content Signals (https://contentsignals.org/) — how this content may be used:
+#   search   = build a search index / return links + short excerpts
+#   ai-input = feed content into AI models for real-time answers (e.g. RAG)
+#   ai-train = train or fine-tune AI models
+# Public docs/marketing site: search + AI answers are welcome; training is not.
+# ai-train=no is an express reservation of rights under Article 4 of EU
+# Directive 2019/790 on Copyright in the Digital Single Market.
+Content-Signal: search=yes, ai-input=yes, ai-train=no
 Allow: /
 # Agent-facing artifacts — explicitly allowed so LLMs/agents can fetch them.
 Allow: /llms.txt
