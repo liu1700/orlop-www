@@ -43,6 +43,12 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // Astro/Starlight emits the sitemap as /sitemap-index.xml (+ /sitemap-0.xml).
+    // Redirect the conventional name people and tools guess to the real index.
+    if (url.pathname === '/sitemap.xml') {
+      return Response.redirect(new URL('/sitemap-index.xml', url.origin), 301);
+    }
+
     const negotiable =
       (request.method === 'GET' || request.method === 'HEAD') &&
       isPageRequest(url.pathname);

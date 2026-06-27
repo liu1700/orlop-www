@@ -1,4 +1,0 @@
-# Cloudflare static-asset redirects (https://developers.cloudflare.com/pages/configuration/redirects/).
-# Astro/Starlight emits the sitemap as /sitemap-index.xml (+ /sitemap-0.xml), not
-# /sitemap.xml. Send the conventional name people and tools guess to the index.
-/sitemap.xml  /sitemap-index.xml  301
