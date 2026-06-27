@@ -1,9 +1,9 @@
 ---
 title: orlop
-description: A zero-trust file plane that gives each untrusted agent its own durable, per-tenant POSIX disk — without ever handing it a storage credential.
+description: A zero-trust file plane that gives each untrusted agent its own durable, per-tenant POSIX disk, without ever handing it a storage credential.
 template: splash
 hero:
-  tagline: Give each untrusted agent its own durable POSIX disk — without ever handing it your storage credentials.
+  tagline: Give each untrusted agent its own durable POSIX disk, without ever handing it your storage credentials.
   actions:
     - text: Quickstart
       link: /reference/standalone-quickstart/
@@ -25,7 +25,7 @@ orlop is a multi-tenant, **zero-trust file plane** for agent sandboxes. Each
 agent gets one auto-expanding POSIX directory that it mounts over FUSE and uses
 like an ordinary disk. The bytes live remotely in a content-addressed chunk
 store, so when the sandbox dies the data persists and the next run re-mounts the
-same disk with zero idle compute — and the agent never sees a storage credential.
+same disk with zero idle compute, and the agent never sees a storage credential.
 
 ## Why orlop
 
@@ -58,8 +58,8 @@ same disk with zero idle compute — and the agent never sees a storage credenti
 
 ## Built for agent memory
 
-orlop is the **storage substrate** for an agent-memory stack — durable, cheap to
-update, and safe under multi-tenancy — but it does no extraction, ranking, or
+orlop is the **storage substrate** for an agent-memory stack (durable, cheap to
+update, and safe under multi-tenancy), but it does no extraction, ranking, or
 semantic consolidation; the layer above does. See
 [Agent memory](/reference/agent-memory/) for what orlop gives that stack and
 where it stops.

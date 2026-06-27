@@ -42,6 +42,7 @@ const ORDER = [
   'design',
   'design-data-plane',
   'design-auth',
+  'design-identity',
   'control-plane',
   'control-plane-runbook',
   'audit-events',
@@ -251,7 +252,7 @@ async function writeLlms(docs, overview) {
   await fs.writeFile(path.join(PUBLIC_DIR, 'llms.txt'), llms);
 
   // llms-full.txt — the whole corpus inlined for one-shot retrieval.
-  let full = `# orlop — full documentation\n\n> ${TAGLINE}\n\n`;
+  let full = `# orlop full documentation\n\n> ${TAGLINE}\n\n`;
   for (const a of overview) full += `\n\n# ${a.title}\n\n${a.body}\n`;
   for (const d of docs) full += `\n\n# ${d.title}\n\n${d.body}\n`;
   await fs.writeFile(path.join(PUBLIC_DIR, 'llms-full.txt'), full);

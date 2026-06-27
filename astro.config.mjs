@@ -15,9 +15,19 @@ export default defineConfig({
     starlight({
       title: 'orlop',
       description:
-        'A zero-trust file plane that gives each untrusted agent its own durable, per-tenant POSIX disk — without ever handing it a storage credential.',
+        'A zero-trust file plane that gives each untrusted agent its own durable, per-tenant POSIX disk, without ever handing it a storage credential.',
       tagline:
         'Durable per-tenant POSIX disks for untrusted agent sandboxes.',
+      // Brand mark in the browser tab. The SVG carries its own dark background,
+      // so it reads on both light and dark UA chrome.
+      favicon: '/favicon.svg',
+      // The wordmark already spells "orlop", so it replaces the text title.
+      // light = dark ink for light theme; dark = cream ink for dark theme.
+      logo: {
+        light: './src/assets/orlop-wordmark-light.svg',
+        dark: './src/assets/orlop-wordmark-dark.svg',
+        replacesTitle: true,
+      },
       social: [
         {
           icon: 'github',
