@@ -4,7 +4,8 @@ Marketing + documentation site for [orlop](https://github.com/liu1700/orlop),
 built with [Astro](https://astro.build) and
 [Starlight](https://starlight.astro.build). Optimized for both traditional search
 (clean static HTML, sitemap, per-page metadata) and agent/LLM search
-(auto-generated [`/llms.txt`](https://llmstxt.org/) and `/llms-full.txt`).
+(auto-generated [`/llms.txt`](https://llmstxt.org/) and `/llms-full.txt`, plus
+Markdown content negotiation — see below).
 
 This is a **separate repo** from the orlop codebase on purpose — it keeps the
 Go/Rust core free of a Node toolchain and marketing copy. The deep reference docs
@@ -57,3 +58,25 @@ inside `llms.txt`. Optionally add a `public/favicon.svg` and a social-card image
 The same settings work on Vercel or Netlify (build `npm run build`, output `dist`).
 Because docs are fetched from GitHub at build time, **re-deploy this site whenever
 the orlop docs change** (a deploy hook or a scheduled build keeps it fresh).
+
+## Markdown for Agents
+
+Agents that send `Accept: text/markdown` get a Markdown version of a page;
+browsers (which request `text/html`) keep getting HTML. The Markdown response
+carries `Content-Type: text/markdown; charset=utf-8`, an `x-markdown-tokens`
+estimate, and `Vary: Accept`.
+
+```bash
+curl -H 'Accept: text/markdown' https://orlop.dev/faq/
+```
+
+This is implemented in [`functions/_middleware.js`](functions/_middleware.js), a
+Cloudflare Pages Function that serves prebuilt per-page Markdown. `sync:docs`
+generates those files into `public/` alongside the `llms.txt` outputs (`/` →
+`index.md`, `/<slug>/` → `<slug>.md`, `/reference/<slug>/` →
+`reference/<slug>.md`); all are git-ignored. Because negotiation runs in the
+Pages Function, it works on the free plan and needs no dashboard configuration.
+(Cloudflare also offers a zone-level [Markdown for
+Agents](https://developers.cloudflare.com/fundamentals/reference/markdown-for-agents/)
+toggle under *AI Crawl Control* on Pro+ plans; the in-repo Function makes the
+behavior portable and independent of that setting.)

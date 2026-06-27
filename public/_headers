@@ -1,0 +1,9 @@
+# Cloudflare static-asset response headers (https://developers.cloudflare.com/pages/configuration/headers/).
+# Advertise agent-facing resources via RFC 8288 Link headers using IANA-registered
+# link relation types (https://www.iana.org/assignments/link-relations/).
+
+# Homepage: point agents at the LLM-friendly artifacts and the docs.
+/
+  Link: </llms.txt>; rel="alternate"; type="text/plain"; title="llms.txt"
+  Link: </llms-full.txt>; rel="alternate"; type="text/plain"; title="llms-full.txt"
+  Link: </what-is-orlop/>; rel="service-doc"; type="text/html"; title="orlop documentation"
