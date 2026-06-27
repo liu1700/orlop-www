@@ -47,6 +47,7 @@ export default defineConfig({
           label: 'Guides',
           items: [
             { label: 'Quickstart (single node)', slug: 'reference/standalone-quickstart' },
+            { label: 'Database backends', slug: 'reference/database-backends' },
             { label: 'Agent memory', slug: 'reference/agent-memory' },
           ],
         },
