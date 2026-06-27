@@ -19,7 +19,9 @@ export default defineConfig({
       tagline:
         'Durable per-tenant POSIX disks for untrusted agent sandboxes.',
       // Brand mark in the browser tab. The SVG carries its own dark background,
-      // so it reads on both light and dark UA chrome.
+      // so it reads on both light and dark UA chrome. The .ico + apple-touch
+      // fallbacks (wired in `head` below) cover Safari/iOS and any client that
+      // can't render an SVG favicon, which otherwise fall back to a 404 icon.
       favicon: '/favicon.svg',
       // The wordmark already spells "orlop", so it replaces the text title.
       // light = dark ink for light theme; dark = cream ink for dark theme.
@@ -38,8 +40,18 @@ export default defineConfig({
       editLink: {
         baseUrl: 'https://github.com/liu1700/orlop/edit/main/',
       },
-      // Surface the agent-facing artifacts in <head> so crawlers/agents find them.
       head: [
+        // Favicon fallbacks. The .ico declares an explicit size so SVG-capable
+        // browsers still prefer the crisp vector above; Safari/iOS use these.
+        {
+          tag: 'link',
+          attrs: { rel: 'icon', href: '/favicon.ico', sizes: '32x32' },
+        },
+        {
+          tag: 'link',
+          attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' },
+        },
+        // Surface the agent-facing artifacts in <head> so crawlers/agents find them.
         {
           tag: 'link',
           attrs: { rel: 'alternate', type: 'text/plain', href: '/llms.txt', title: 'llms.txt' },
