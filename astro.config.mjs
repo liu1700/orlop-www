@@ -15,7 +15,7 @@ export default defineConfig({
     starlight({
       title: 'orlop',
       description:
-        'A zero-trust file plane that gives each untrusted agent its own durable, per-tenant POSIX disk, without ever handing it a storage credential.',
+        'A zero-trust file plane that gives each untrusted agent its own durable, per-tenant POSIX disk, with identity.',
       tagline:
         'Durable per-tenant POSIX disks for untrusted agent sandboxes.',
       // Brand mark in the browser tab. The SVG carries its own dark background,
