@@ -8,10 +8,9 @@ User-agent: *
 #   search   = build a search index / return links + short excerpts
 #   ai-input = feed content into AI models for real-time answers (e.g. RAG)
 #   ai-train = train or fine-tune AI models
-# Public docs/marketing site: search + AI answers are welcome; training is not.
-# ai-train=no is an express reservation of rights under Article 4 of EU
-# Directive 2019/790 on Copyright in the Digital Single Market.
-Content-Signal: search=yes, ai-input=yes, ai-train=no
+# Public docs/marketing site: search, AI answers, and model training are all
+# welcome — we want orlop discovered and used wherever agents and models look.
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 # Agent-facing artifacts — explicitly allowed so LLMs/agents can fetch them.
 Allow: /llms.txt
