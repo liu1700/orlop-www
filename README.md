@@ -46,18 +46,29 @@ Register a domain, then set it in **two** places (kept intentionally in sync):
 These drive canonical URLs, the sitemap, Open Graph tags, and the absolute links
 inside `llms.txt`. Optionally add a `public/favicon.svg` and a social-card image.
 
-## Deploy to Cloudflare Pages (free)
+## Deploy to Cloudflare Workers (free)
 
-1. In Cloudflare Pages, **Create a project → Connect to Git** and pick this repo.
+Deployed as a **Worker with Static Assets** (not Pages) so the Worker in
+[`worker/index.js`](worker/index.js) can do Accept-based content negotiation
+(see *Markdown for Agents* below). [`wrangler.jsonc`](wrangler.jsonc) wires the
+static build (`./dist`) to the Worker.
+
+1. In the Cloudflare dashboard, **Workers & Pages → Create → Import a repository**
+   and pick this repo (this sets up Workers Builds).
 2. Build settings:
-   - **Root directory:** *(leave blank — repo root)*
    - **Build command:** `npm run build`
-   - **Build output directory:** `dist`
-3. Add your custom domain in the Pages project once DNS is on Cloudflare.
+   - **Deploy command:** `npx wrangler deploy` *(reads `wrangler.jsonc`)*
+3. Add your custom domain to the Worker once DNS is on Cloudflare.
 
-The same settings work on Vercel or Netlify (build `npm run build`, output `dist`).
 Because docs are fetched from GitHub at build time, **re-deploy this site whenever
-the orlop docs change** (a deploy hook or a scheduled build keeps it fresh).
+the orlop docs change**. A scheduled GitHub Action
+([`.github/workflows/scheduled-rebuild.yml`](.github/workflows/scheduled-rebuild.yml))
+pokes a Cloudflare deploy hook daily; run it manually from the Actions tab to
+deploy on demand. Note that merging to `main` does **not** auto-deploy unless you
+also enable push builds on the Workers Builds Git connection.
+
+A plain static host (Vercel/Netlify, or Cloudflare Pages) also works for the
+HTML/`llms.txt`, but the Markdown content negotiation below needs the Worker.
 
 ## Markdown for Agents
 
@@ -70,12 +81,13 @@ estimate, and `Vary: Accept`.
 curl -H 'Accept: text/markdown' https://orlop.dev/faq/
 ```
 
-This is implemented in [`functions/_middleware.js`](functions/_middleware.js), a
-Cloudflare Pages Function that serves prebuilt per-page Markdown. `sync:docs`
-generates those files into `public/` alongside the `llms.txt` outputs (`/` →
-`index.md`, `/<slug>/` → `<slug>.md`, `/reference/<slug>/` →
-`reference/<slug>.md`); all are git-ignored. Because negotiation runs in the
-Pages Function, it works on the free plan and needs no dashboard configuration.
+This is implemented in [`worker/index.js`](worker/index.js), the Worker that
+fronts the static assets (`assets.run_worker_first` in `wrangler.jsonc`), serving
+prebuilt per-page Markdown. `sync:docs` generates those files into `public/`
+alongside the `llms.txt` outputs (`/` → `index.md`, `/<slug>/` → `<slug>.md`,
+`/reference/<slug>/` → `reference/<slug>.md`); all are git-ignored. Because
+negotiation runs in the Worker, it works on the free plan and needs no dashboard
+configuration.
 (Cloudflare also offers a zone-level [Markdown for
 Agents](https://developers.cloudflare.com/fundamentals/reference/markdown-for-agents/)
 toggle under *AI Crawl Control* on Pro+ plans; the in-repo Function makes the
