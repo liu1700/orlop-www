@@ -61,8 +61,17 @@ it with real tenants.
 ## How do I try it?
 
 Follow the [Quickstart (single node)](/reference/standalone-quickstart/): a
-complete stack (Postgres + control + server + one mounted disk) runs on one host
-with no external dependencies.
+complete stack — control plane, data-plane server, and one mounted disk — runs on
+one host. The control plane ships an embedded SQLite backend, so it needs **no
+external dependencies at all**, not even a database server.
+
+## Do I need Postgres?
+
+Not for a single node. The control plane can run on an embedded, pure-Go
+**SQLite** backend (`DATABASE_URL=sqlite:./orlop.db`) — ideal for local dev, CI,
+and self-hosting. Reach for **Postgres** when you run more than one control-plane
+replica, or need real write concurrency and managed backups. See
+[Database backends](/reference/database-backends/) for the full comparison.
 
 ## Where does the name come from?
 

@@ -37,6 +37,7 @@ const AUTHORED_SLUGS = ['what-is-orlop', 'faq'];
 // list if the GitHub contents API can't be reached.
 const ORDER = [
   'standalone-quickstart',
+  'database-backends',
   'agent-memory',
   'design',
   'design-data-plane',
