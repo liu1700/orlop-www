@@ -20,6 +20,18 @@ const REPO = 'liu1700/orlop';
 const BRANCH = 'main';
 const REPO_BLOB = `https://github.com/${REPO}/blob/${BRANCH}`;
 
+// One-line product summary, reused across llms.txt and the per-page Markdown
+// representations served for `Accept: text/markdown` (functions/_middleware.js).
+const TAGLINE =
+  'orlop is a multi-tenant, zero-trust file plane for agent sandboxes. Each ' +
+  'agent gets its own durable, auto-expanding POSIX disk mounted over FUSE; ' +
+  'the bytes live in a remote content-addressed chunk store and the agent ' +
+  'never sees a storage credential.';
+
+// Authored pages (plain Markdown, no JSX) that also feed llms-full.txt and the
+// per-page Markdown variants.
+const AUTHORED_SLUGS = ['what-is-orlop', 'faq'];
+
 // Curated order + section for the reference docs (anything not listed still
 // gets published, just appended at the end). Doubles as the offline fallback
 // list if the GitHub contents API can't be reached.
@@ -178,22 +190,11 @@ async function readAuthored(slug) {
   }
 }
 
-async function writeLlms(docs) {
+async function writeLlms(docs, overview) {
   await fs.mkdir(PUBLIC_DIR, { recursive: true });
-  const tagline =
-    'orlop is a multi-tenant, zero-trust file plane for agent sandboxes. Each ' +
-    'agent gets its own durable, auto-expanding POSIX disk mounted over FUSE; ' +
-    'the bytes live in a remote content-addressed chunk store and the agent ' +
-    'never sees a storage credential.';
-
-  const overview = [];
-  for (const slug of ['what-is-orlop', 'faq']) {
-    const a = await readAuthored(slug);
-    if (a) overview.push({ slug, ...a, url: `${SITE}/${slug}/` });
-  }
 
   // llms.txt — a curated map for agents/LLMs (https://llmstxt.org/).
-  let llms = `# orlop\n\n> ${tagline}\n\n`;
+  let llms = `# orlop\n\n> ${TAGLINE}\n\n`;
   llms += `## Overview\n`;
   for (const a of overview) llms += `- [${a.title}](${a.url})\n`;
   llms += `\n## Design & reference\n`;
@@ -205,15 +206,61 @@ async function writeLlms(docs) {
   await fs.writeFile(path.join(PUBLIC_DIR, 'llms.txt'), llms);
 
   // llms-full.txt — the whole corpus inlined for one-shot retrieval.
-  let full = `# orlop — full documentation\n\n> ${tagline}\n\n`;
+  let full = `# orlop — full documentation\n\n> ${TAGLINE}\n\n`;
   for (const a of overview) full += `\n\n# ${a.title}\n\n${a.body}\n`;
   for (const d of docs) full += `\n\n# ${d.title}\n\n${d.body}\n`;
   await fs.writeFile(path.join(PUBLIC_DIR, 'llms-full.txt'), full);
 }
 
+// Per-page Markdown representations. functions/_middleware.js serves these when
+// a client sends `Accept: text/markdown`, mirroring the site's routes:
+//   /                  -> public/index.md
+//   /<slug>/           -> public/<slug>.md
+//   /reference/<slug>/ -> public/reference/<slug>.md
+// All files are git-ignored build artifacts, like the llms.txt outputs.
+async function writeMarkdownPages(docs, overview) {
+  await fs.mkdir(path.join(PUBLIC_DIR, 'reference'), { recursive: true });
+
+  // Landing page: index.mdx is JSX, so synthesize a concise Markdown view.
+  let index = `# orlop\n\n> ${TAGLINE}\n\n## Overview\n`;
+  for (const a of overview) index += `- [${a.title}](/${a.slug}/)\n`;
+  index += `\n## Design & reference\n`;
+  for (const d of docs) {
+    index += `- [${d.title}](/reference/${d.slug}/)`;
+    index += d.description ? `: ${d.description}\n` : `\n`;
+  }
+  index += `\n## Source\n- [GitHub repository](https://github.com/${REPO})\n`;
+  await fs.writeFile(path.join(PUBLIC_DIR, 'index.md'), index);
+
+  // Authored content pages.
+  for (const a of overview) {
+    await fs.writeFile(
+      path.join(PUBLIC_DIR, `${a.slug}.md`),
+      `# ${a.title}\n\n${a.body}\n`
+    );
+  }
+
+  // Reference pages (bodies already have site-relative links from rewriteLinks).
+  for (const d of docs) {
+    await fs.writeFile(
+      path.join(PUBLIC_DIR, 'reference', `${d.slug}.md`),
+      `# ${d.title}\n\n${d.body}\n`
+    );
+  }
+}
+
 const docs = await readDocs();
 await writeReference(docs);
-await writeLlms(docs);
+
+const overview = [];
+for (const slug of AUTHORED_SLUGS) {
+  const a = await readAuthored(slug);
+  if (a) overview.push({ slug, ...a, url: `${SITE}/${slug}/` });
+}
+
+await writeLlms(docs, overview);
+await writeMarkdownPages(docs, overview);
 console.log(
-  `sync:docs — ${docs.length} reference pages + llms.txt + llms-full.txt generated.`
+  `sync:docs — ${docs.length} reference pages + llms.txt + llms-full.txt + ` +
+    `${docs.length + overview.length + 1} markdown page variants generated.`
 );
