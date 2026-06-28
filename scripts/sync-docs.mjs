@@ -38,14 +38,18 @@ const AUTHORED_SLUGS = ['what-is-orlop', 'faq'];
 const ORDER = [
   'standalone-quickstart',
   'advanced-usage',
+  'manual-bring-up',
   'database-backends',
-  'agent-memory',
+  'container-images',
+  'kubernetes',
+  'upgrade-safety',
   'design',
   'design-data-plane',
   'design-auth',
   'design-identity',
   'control-plane',
   'control-plane-runbook',
+  'agent-memory',
   'audit-events',
 ];
 
